@@ -16,7 +16,9 @@
     "express": "^4.18.2",
     "html-metadata-parser": "^2.0.4",
     "metadata-scraper": "^0.2.61",
-    "node-rake-v2": "^0.0.2"
+    "natural": "^6.2.0",
+    "node-rake-v2": "^0.0.2",
+    "stopwords": "^0.0.9"
   },
   "devDependencies": {
     "nodemon": "^2.0.21"
