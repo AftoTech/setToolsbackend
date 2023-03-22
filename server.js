@@ -102,7 +102,19 @@ app.post("/KeywordCompetitorAnalysis", (req, res) => {
   try {
     const inputData = req.body;
     if (!inputData) throw new Error("No data provided");
-    res.json(inputData.text);
+   const options = {
+  page: 0, 
+  safe: false, // Safe Search
+  parse_ads: false, // If set to true sponsored results will be parsed
+  additional_params: { 
+    // add additional parameters here, see https://moz.com/blog/the-ultimate-guide-to-the-google-search-parameters and https://www.seoquake.com/blog/google-search-param/
+    hl: 'en' 
+  }
+   }
+    google.search(inputData.text, options).then((response) => {
+      res.json(JSON.stringify(response))
+    });
+   
     // // Do some processing with the input data
   } catch (error) {
     console.error(error.message);
