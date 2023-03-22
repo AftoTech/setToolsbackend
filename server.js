@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { parser } = require("html-metadata-parser");
 const natural = require("natural");
+const google = require('googlethis');
 const stopwords = require("stopwords").english;
 const NodeRakeV2 = require("node-rake-v2").NodeRakeV2;
 const app = express();
@@ -22,7 +23,7 @@ app.post("/metatagextract", (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
+// keywordExtractor
 app.post("/keywordExtractor", (req, res) => {
   const node_rake_v2 = new NodeRakeV2();
   node_rake_v2.addStopWords(stopwords);
@@ -92,6 +93,20 @@ app.post("/keywordDensityChecker", (req, res) => {
     res.json(strigit)
   } catch (error) {
     res.json(error)
+  }
+});
+
+// KeywordCompetitorAnalysis
+
+app.post("/KeywordCompetitorAnalysis", (req, res) => {
+  try {
+    const inputData = req.body;
+    if (!inputData) throw new Error("No data provided");
+    res.json(inputData.text);
+    // // Do some processing with the input data
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 
