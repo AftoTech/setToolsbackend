@@ -5,6 +5,9 @@ const natural = require("natural");
 const google = require('googlethis');
 const stopwords = require("stopwords").english;
 const NodeRakeV2 = require("node-rake-v2").NodeRakeV2;
+const request = require('request');
+const cheerio = require('cheerio');
+const async = require('async');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -121,6 +124,61 @@ app.post("/KeywordCompetitorAnalysis", (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+app.post("/BacklinkChecker", (req, res) => {
+  try {
+    const inputData = req.body;
+    let url = inputData.text
+    if (!inputData) throw new Error("No data provided");
+    const baseUrl = 'https://www.google.com/search?q=';
+  const query = 'link:' + url;
+  const urls = [];
+
+  // Generate URLs for first 10 pages of Google search results
+  for (let i = 0; i < 10; i++) {
+    urls.push(baseUrl + query + '&start=' + i * 10);
+  }
+
+  // Send HTTP requests to Google search result pages in parallel
+  async.mapLimit(urls, 5, function(url, callback) {
+    request(url, function (error, response, body) {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      // Parse HTML content using Cheerio
+      let $ = cheerio.load(body);
+
+      // Find all links on page
+      $('a').each(function() {
+        let link = $(this).attr('href');
+
+        // Check if link is an external backlink to target URL
+        if (link && link.includes('://') && link.includes(url)) {
+          console.log(link + ' is an external backlink to ' + url);
+        }
+      });
+
+      callback(null);
+    });
+  }, function(err, results) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log('Finished checking backlinks for ' + url);
+    }
+  });
+   
+   
+    // // Do some processing with the input data
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
 
 app.get("/message", (req, res) => {
   res.json({ message: "Hello from server!" });
