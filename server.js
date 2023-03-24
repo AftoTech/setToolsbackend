@@ -8,6 +8,9 @@ const NodeRakeV2 = require("node-rake-v2").NodeRakeV2;
 const request = require('request');
 const cheerio = require('cheerio');
 const async = require('async');
+const axios = require('axios');
+const { default: checkExternalBacklinksOnGoogle } = require("./backlinkchecker");
+const { json } = require("express");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -127,16 +130,15 @@ app.post("/KeywordCompetitorAnalysis", (req, res) => {
 
 app.post("/BacklinkChecker", (req, res) => {
   try {
-    const inputData = req.body;
-    let url = inputData.text
-    if (!inputData) throw new Error("No data provided");
-    const baseUrl = 'https://www.google.com/search?q=';
+    let url = 'https://www.asahitechnologies.com/'
+   const baseUrl = 'https://www.google.com/search?q=';
   const query = 'link:' + url;
   const urls = [];
 
   // Generate URLs for first 10 pages of Google search results
-  for (let i = 0; i < 10; i++) {
-    urls.push(baseUrl + query + '&start=' + i * 10);
+    for (let i = 0; i < 1; i++) {
+     urls.push(baseUrl + query + '&start=' + i * 10)
+    
   }
 
   // Send HTTP requests to Google search result pages in parallel
@@ -153,7 +155,7 @@ app.post("/BacklinkChecker", (req, res) => {
       // Find all links on page
       $('a').each(function() {
         let link = $(this).attr('href');
-
+        console.log(link)
         // Check if link is an external backlink to target URL
         if (link && link.includes('://') && link.includes(url)) {
           console.log(link + ' is an external backlink to ' + url);
@@ -169,7 +171,52 @@ app.post("/BacklinkChecker", (req, res) => {
       console.log('Finished checking backlinks for ' + url);
     }
   });
-   
+    // // Do some processing with the input data
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Function to check if a link is broken
+async function isLinkBroken(link) {
+  try {
+    const response = await axios.get(link);
+    return response.status !== 200; // Check if the status code is not 200 OK
+  } catch (error) {
+    return true; // Assume the link is broken if there is an error
+  }
+}
+
+// Function to find all links on a page and check if they are broken
+async function checkPageForBrokenLinks(url) {
+  const response = await axios.get(url);
+  const $ = cheerio.load(response.data);
+  const links = $('a'); // Select all links using Cheerio
+  const results = [];
+
+ for (let i = 0; i < links.length && i < 10; i++) {
+    const link = $(links[i]).attr('href');
+    if (link) {
+      const isBroken = link.startsWith('http') ? await isLinkBroken(link) : false;
+      results.push({ link, isBroken });
+    }
+  }
+
+  return results;
+}
+
+// brokenLinkChecker
+app.post("/brokenLinkChecker", async(req, res) => {
+ 
+  try {
+    const inputData = req.body;
+    if (!inputData) throw new Error("No data provided");
+    console.log(inputData.text)
+    // const keywords = node_rake_v2.generate(inputData.text);
+    const results = await checkPageForBrokenLinks(inputData.text);
+  res.json(results);
+    
    
     // // Do some processing with the input data
   } catch (error) {
