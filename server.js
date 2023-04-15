@@ -50,51 +50,51 @@ app.post("/keywordExtractor", (req, res) => {
 
 app.post("/keywordDensityChecker", (req, res) => {
   try {
-     const inputData = req.body;
+    const inputData = req.body;
     // Remove stop words
-      const words = inputData.text.toLowerCase().split(' ').filter(word => !stopwords.includes(word));
+    const words = inputData.text.toLowerCase().split(' ').filter(word => !stopwords.includes(word));
 
-  // Split into one, two, and three-word phrases
-  const onePhrases = words.map(word => [word]);
-  const twoPhrases = [];
-  const threePhrases = [];
+    // Split into one, two, and three-word phrases
+    const onePhrases = words.map(word => [word]);
+    const twoPhrases = [];
+    const threePhrases = [];
 
-  for (let i = 0; i < words.length - 1; i++) {
-    twoPhrases.push([words[i], words[i + 1]]);
+    for (let i = 0; i < words.length - 1; i++) {
+      twoPhrases.push([words[i], words[i + 1]]);
 
-    if (i < words.length - 2) {
-      threePhrases.push([words[i], words[i + 1], words[i + 2]]);
+      if (i < words.length - 2) {
+        threePhrases.push([words[i], words[i + 1], words[i + 2]]);
+      }
     }
-  }
 
-  // Get frequency count for each phrase
-  const phraseCounts = {};
+    // Get frequency count for each phrase
+    const phraseCounts = {};
 
-  onePhrases.forEach(phrase => {
-    const phraseStr = phrase.join(' ');
-    phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
-  });
+    onePhrases.forEach(phrase => {
+      const phraseStr = phrase.join(' ');
+      phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
+    });
 
-  twoPhrases.forEach(phrase => {
-    const phraseStr = phrase.join(' ');
-    phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
-  });
+    twoPhrases.forEach(phrase => {
+      const phraseStr = phrase.join(' ');
+      phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
+    });
 
-  threePhrases.forEach(phrase => {
-    const phraseStr = phrase.join(' ');
-    phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
-  });
+    threePhrases.forEach(phrase => {
+      const phraseStr = phrase.join(' ');
+      phraseCounts[phraseStr] = (phraseCounts[phraseStr] || 0) + 1;
+    });
 
-  // Get top 10 keywords
-  const sortedPhrases = Object.keys(phraseCounts).sort((a, b) => phraseCounts[b] - phraseCounts[a]);
+    // Get top 10 keywords
+    const sortedPhrases = Object.keys(phraseCounts).sort((a, b) => phraseCounts[b] - phraseCounts[a]);
     const topPhrases = sortedPhrases.slice(0, 10);
-    
+
     const Objectvalue = {
       "onePhrases": onePhrases,
       "twoPhrases": twoPhrases,
       "threePhrases": threePhrases,
       "topKeywords": topPhrases,
-     }
+    }
     let strigit = JSON.stringify(Objectvalue)
     res.json(strigit)
   } catch (error) {
@@ -108,19 +108,19 @@ app.post("/KeywordCompetitorAnalysis", (req, res) => {
   try {
     const inputData = req.body;
     if (!inputData) throw new Error("No data provided");
-   const options = {
-  page: 0, 
-  safe: false, // Safe Search
-  parse_ads: false, // If set to true sponsored results will be parsed
-  additional_params: { 
-    // add additional parameters here, see https://moz.com/blog/the-ultimate-guide-to-the-google-search-parameters and https://www.seoquake.com/blog/google-search-param/
-    hl: 'en' 
-  }
-   }
+    const options = {
+      page: 0,
+      safe: false, // Safe Search
+      parse_ads: false, // If set to true sponsored results will be parsed
+      additional_params: {
+        // add additional parameters here, see https://moz.com/blog/the-ultimate-guide-to-the-google-search-parameters and https://www.seoquake.com/blog/google-search-param/
+        hl: 'en'
+      }
+    }
     google.search(inputData.text, options).then((response) => {
       res.json(JSON.stringify(response))
     });
-   
+
     // // Do some processing with the input data
   } catch (error) {
     console.error(error.message);
@@ -131,46 +131,46 @@ app.post("/KeywordCompetitorAnalysis", (req, res) => {
 app.post("/BacklinkChecker", (req, res) => {
   try {
     let url = 'https://www.asahitechnologies.com/'
-   const baseUrl = 'https://www.google.com/search?q=';
-  const query = 'link:' + url;
-  const urls = [];
+    const baseUrl = 'https://www.google.com/search?q=';
+    const query = 'link:' + url;
+    const urls = [];
 
-  // Generate URLs for first 10 pages of Google search results
+    // Generate URLs for first 10 pages of Google search results
     for (let i = 0; i < 1; i++) {
-     urls.push(baseUrl + query + '&start=' + i * 10)
-    
-  }
+      urls.push(baseUrl + query + '&start=' + i * 10)
 
-  // Send HTTP requests to Google search result pages in parallel
-  async.mapLimit(urls, 5, function(url, callback) {
-    request(url, function (error, response, body) {
-      if (error) {
-        callback(error);
-        return;
-      }
-
-      // Parse HTML content using Cheerio
-      let $ = cheerio.load(body);
-
-      // Find all links on page
-      $('a').each(function() {
-        let link = $(this).attr('href');
-        console.log(link)
-        // Check if link is an external backlink to target URL
-        if (link && link.includes('://') && link.includes(url)) {
-          console.log(link + ' is an external backlink to ' + url);
-        }
-      });
-
-      callback(null);
-    });
-  }, function(err, results) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log('Finished checking backlinks for ' + url);
     }
-  });
+
+    // Send HTTP requests to Google search result pages in parallel
+    async.mapLimit(urls, 5, function (url, callback) {
+      request(url, function (error, response, body) {
+        if (error) {
+          callback(error);
+          return;
+        }
+
+        // Parse HTML content using Cheerio
+        let $ = cheerio.load(body);
+
+        // Find all links on page
+        $('a').each(function () {
+          let link = $(this).attr('href');
+          console.log(link)
+          // Check if link is an external backlink to target URL
+          if (link && link.includes('://') && link.includes(url)) {
+            console.log(link + ' is an external backlink to ' + url);
+          }
+        });
+
+        callback(null);
+      });
+    }, function (err, results) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log('Finished checking backlinks for ' + url);
+      }
+    });
     // // Do some processing with the input data
   } catch (error) {
     console.error(error.message);
@@ -195,7 +195,7 @@ async function checkPageForBrokenLinks(url) {
   const links = $('a'); // Select all links using Cheerio
   const results = [];
 
- for (let i = 0; i < links.length && i < 10; i++) {
+  for (let i = 0; i < links.length && i < 10; i++) {
     const link = $(links[i]).attr('href');
     if (link) {
       const isBroken = link.startsWith('http') ? await isLinkBroken(link) : false;
@@ -207,17 +207,17 @@ async function checkPageForBrokenLinks(url) {
 }
 
 // brokenLinkChecker
-app.post("/brokenLinkChecker", async(req, res) => {
- 
+app.post("/brokenLinkChecker", async (req, res) => {
+
   try {
     const inputData = req.body;
     if (!inputData) throw new Error("No data provided");
     console.log(inputData.text)
     // const keywords = node_rake_v2.generate(inputData.text);
     const results = await checkPageForBrokenLinks(inputData.text);
-  res.json(results);
-    
-   
+    res.json(results);
+
+
     // // Do some processing with the input data
   } catch (error) {
     console.error(error.message);
@@ -229,6 +229,10 @@ app.post("/brokenLinkChecker", async(req, res) => {
 
 app.get("/message", (req, res) => {
   res.json({ message: "Hello from server!" });
+});
+
+app.get("/", (req, res) => {
+  res.json("Welcome to seo tools home!!!");
 });
 
 app.listen(8000, () => {
